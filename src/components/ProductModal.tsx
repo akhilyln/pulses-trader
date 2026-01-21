@@ -67,7 +67,6 @@ export const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, pro
                                             {brand.change !== null && (
                                                 <span className={`text-sm font-bold flex items-center gap-1 ${brand.change >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                                                     {brand.change >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
-                                                    {Math.abs(brand.change).toFixed(1)}%
                                                 </span>
                                             )}
                                             <span className="text-[10px] text-zinc-500 flex items-center gap-1">

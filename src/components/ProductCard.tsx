@@ -55,9 +55,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({ name, teluguName, bran
                 <div className="text-zinc-500 text-sm">Price starts at</div>
                 <div className="flex items-baseline gap-2">
                     <span className="text-2xl font-black text-white">₹{minPrice.toFixed(2)}</span>
-                    <span className={`text-sm font-bold ${totalChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                        {totalChange >= 0 ? '+' : ''}{totalChange.toFixed(1)}%
-                    </span>
                 </div>
             </div>
 

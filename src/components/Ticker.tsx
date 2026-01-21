@@ -18,7 +18,7 @@ export const Ticker: React.FC<{ items: TickerItem[] }> = ({ items }) => {
                         <span className="text-white font-bold">₹{item.price}</span>
                         {item.change !== null && (
                             <span className={`ml-2 text-xs font-bold ${item.change >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                                {item.change >= 0 ? '▲' : '▼'} {Math.abs(item.change).toFixed(1)}%
+                                {item.change >= 0 ? '▲' : '▼'}
                             </span>
                         )}
                     </div>
