@@ -49,10 +49,18 @@ export default function Home() {
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         <header className="mb-12 text-center">
-          <h1 className="text-5xl font-black mb-4 bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
-            PULSES TRADING
+          <h1 className="text-5xl font-black mb-4 bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent uppercase tracking-tight">
+            VIJAYA AMBICA ENTERPRISES
           </h1>
-          <p className="text-zinc-500 font-medium">Live Market Updates • Every Hour</p>
+          <div className="flex flex-col gap-2">
+            <p className="text-zinc-500 font-medium tracking-wide">
+              Trading Since 1970 <span className="mx-2">•</span> 56 Years of Trust
+            </p>
+            <div className="inline-flex items-center justify-center gap-2 bg-green-500/10 border border-green-500/20 text-green-400 px-4 py-1.5 rounded-full text-sm font-bold w-fit mx-auto">
+              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              Minimum Order Quantity (MOQ): 1 Ton
+            </div>
+          </div>
         </header>
 
         <div className="relative mb-12 max-w-2xl mx-auto">
@@ -100,8 +108,8 @@ export default function Home() {
       />
 
       <footer className="mt-20 py-10 border-t border-zinc-900 text-center text-zinc-600 text-sm">
-        <p>&copy; 2024 Pulses Trading Business. All rights reserved.</p>
-        <p className="mt-2 text-zinc-700">Stock Market Interface v1.0</p>
+        <p>&copy; {new Date().getFullYear()} Vijaya Ambica Enterprises. All rights reserved.</p>
+        <p className="mt-2 text-zinc-700">Market Interface v1.1 • Trading Since 1970</p>
       </footer>
     </main>
   );
