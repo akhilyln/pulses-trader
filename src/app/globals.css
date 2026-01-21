@@ -1,0 +1,57 @@
+@import "tailwindcss";
+@import "ag-grid-community/styles/ag-grid.css";
+@import "ag-grid-community/styles/ag-theme-alpine.css";
+
+:root {
+  --background: #0a0a0b;
+  --foreground: #f4f4f5;
+  --card-bg: #18181b;
+  --primary: #22c55e;
+  --secondary: #ef4444;
+  --accent: #3b82f6;
+  --ticker-bg: #111114;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+@layer components {
+  .ticker-container {
+    background: var(--ticker-bg);
+    border-bottom: 1px solid #27272a;
+    overflow: hidden;
+    white-space: nowrap;
+    position: relative;
+  }
+
+  .ticker-track {
+    display: inline-flex;
+    animation: ticker 30s linear infinite;
+  }
+
+  @keyframes ticker {
+    0% {
+      transform: translateX(0);
+    }
+
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+
+  .glass-card {
+    background: rgba(24, 24, 27, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+  }
+
+  .glass-card:hover {
+    border-color: var(--primary);
+    box-shadow: 0 0 15px rgba(34, 197, 94, 0.2);
+  }
+}

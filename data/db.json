@@ -1,0 +1,53 @@
+{
+  "products": [
+    {
+      "id": "1",
+      "name": "Chana Dal",
+      "teluguName": "శనగ పప్పు",
+      "brands": [
+        {
+          "id": "b1",
+          "name": "Prudhvi",
+          "price": 70,
+          "updatedAt": "2024-01-21T10:00:00Z"
+        },
+        {
+          "id": "b2",
+          "name": "Star",
+          "price": 69,
+          "updatedAt": "2024-01-21T10:00:00Z"
+        }
+      ],
+      "updatedAt": "2026-01-21T05:41:15.131Z"
+    },
+    {
+      "id": "2",
+      "name": "Moong Mogar",
+      "teluguName": "పెసర పప్పు",
+      "brands": [
+        {
+          "id": "b3",
+          "name": "Diamond",
+          "price": 105,
+          "updatedAt": "2024-01-21T10:00:00Z"
+        }
+      ],
+      "updatedAt": "2026-01-21T05:41:15.131Z"
+    },
+    {
+      "id": "3",
+      "name": "Toor Dal",
+      "teluguName": "కంది పప్పు",
+      "brands": [
+        {
+          "id": "b4",
+          "name": "A1 Gold",
+          "price": 155,
+          "updatedAt": "2024-01-21T10:00:00Z"
+        }
+      ],
+      "updatedAt": "2026-01-21T05:41:15.131Z"
+    }
+  ],
+  "history": []
+}
