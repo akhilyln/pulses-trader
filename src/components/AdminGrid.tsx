@@ -18,6 +18,7 @@ interface GridRow {
     productId: string;
     productName: string;
     productTeluguName?: string;
+    displayOrder?: number;
     brandId: string;
     brandName: string;
     price: number;
@@ -36,6 +37,7 @@ export const AdminGrid: React.FC<AdminGridProps> = ({ initialData, onSave }) => 
                 productId: p.id,
                 productName: p.name,
                 productTeluguName: p.teluguName,
+                displayOrder: p.displayOrder,
                 brandId: b.id,
                 brandName: b.name,
                 price: b.price,
@@ -45,6 +47,14 @@ export const AdminGrid: React.FC<AdminGridProps> = ({ initialData, onSave }) => 
     });
 
     const columnDefs = useMemo<ColDef<GridRow>[]>(() => [
+        {
+            field: 'displayOrder',
+            headerName: 'Order',
+            editable: true,
+            width: 80,
+            type: 'numericColumn',
+            sort: 'asc'
+        },
         { field: 'productName', headerName: 'Product (EN)', editable: true, flex: 1 },
         { field: 'productTeluguName', headerName: 'Product (TE)', editable: true, flex: 1 },
         { field: 'brandName', headerName: 'Brand', editable: true, flex: 1 },
@@ -75,6 +85,7 @@ export const AdminGrid: React.FC<AdminGridProps> = ({ initialData, onSave }) => 
             productId: `p-${Date.now()}`,
             productName: 'New Product',
             productTeluguName: '',
+            displayOrder: rowData.length > 0 ? Math.max(...rowData.map(r => r.displayOrder || 0)) + 1 : 1,
             brandId: `b-${Date.now()}`,
             brandName: 'New Brand',
             price: 0,
@@ -134,6 +145,7 @@ export const AdminGrid: React.FC<AdminGridProps> = ({ initialData, onSave }) => 
                     id: row.productId,
                     name: row.productName,
                     teluguName: row.productTeluguName,
+                    displayOrder: Number(row.displayOrder) || 100,
                     brands: []
                 });
             }

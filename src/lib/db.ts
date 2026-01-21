@@ -13,6 +13,7 @@ export interface Product {
     id: string;
     name: string;
     teluguName?: string;
+    displayOrder?: number;
     brands: Brand[];
     updatedAt: string;
 }
@@ -37,6 +38,7 @@ export async function readDb(): Promise<DbSchema> {
                 id,
                 name,
                 telugu_name,
+                display_order,
                 updated_at,
                 brands (
                     id,
@@ -47,6 +49,7 @@ export async function readDb(): Promise<DbSchema> {
                     updated_at
                 )
             `)
+            .order('display_order', { ascending: true, nullsFirst: false })
             .order('name');
 
         if (productsError) throw productsError;
@@ -55,6 +58,7 @@ export async function readDb(): Promise<DbSchema> {
             id: p.id,
             name: p.name,
             teluguName: p.telugu_name,
+            displayOrder: p.display_order,
             updatedAt: p.updated_at,
             brands: (p.brands || []).map((b: any) => ({
                 id: b.id,
@@ -100,6 +104,7 @@ export async function writeDb(data: DbSchema): Promise<void> {
                     id: product.id,
                     name: product.name,
                     telugu_name: product.teluguName,
+                    display_order: product.displayOrder,
                     updated_at: new Date().toISOString()
                 });
 
