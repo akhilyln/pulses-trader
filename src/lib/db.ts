@@ -93,32 +93,59 @@ export async function readDb(): Promise<DbSchema> {
 }
 
 export async function writeDb(data: DbSchema): Promise<void> {
-    // This function is for bulk updates. In Supabase, we do it per product/brand
-    // But for the specific "admin bulk save" logic, we can implement it here
     try {
+        const incomingProductIds = data.products.map(p => p.id);
+        const incomingBrandIds = data.products.flatMap(p => p.brands.map(b => b.id));
+
+        // 1. Delete brands not in incoming data
+        let brandDeleteQuery = supabase.from('brands').delete();
+        if (incomingBrandIds.length > 0) {
+            brandDeleteQuery = brandDeleteQuery.not('id', 'in', `(${incomingBrandIds.map(id => `"${id}"`).join(',')})`);
+        } else {
+            // If no brands, delete all (using a filter that's always true for IDs)
+            brandDeleteQuery = brandDeleteQuery.neq('id', 'ffffffff-ffff-ffff-ffff-ffffffffffff');
+        }
+        const { error: deleteBrandsError } = await brandDeleteQuery;
+
+        if (deleteBrandsError) {
+            console.error('Error deleting stale brands:', deleteBrandsError);
+        }
+
+        // 2. Delete products not in incoming data
+        let productDeleteQuery = supabase.from('products').delete();
+        if (incomingProductIds.length > 0) {
+            productDeleteQuery = productDeleteQuery.not('id', 'in', `(${incomingProductIds.map(id => `"${id}"`).join(',')})`);
+        } else {
+            productDeleteQuery = productDeleteQuery.neq('id', 'ffffffff-ffff-ffff-ffff-ffffffffffff');
+        }
+        const { error: deleteProductsError } = await productDeleteQuery;
+
+        if (deleteProductsError) {
+            console.error('Error deleting stale products:', deleteProductsError);
+        }
+
+        // 3. Upsert current products and brands
         for (const product of data.products) {
-            // Upsert product
             const { error: pError } = await supabase
                 .from('products')
                 .upsert({
                     id: product.id,
                     name: product.name,
                     telugu_name: product.teluguName,
-                    display_order: product.displayOrder,
+                    display_order: Number(product.displayOrder) || 100,
                     updated_at: new Date().toISOString()
                 });
 
             if (pError) throw pError;
 
             for (const brand of product.brands) {
-                // Upsert brand
                 const { error: bError } = await supabase
                     .from('brands')
                     .upsert({
                         id: brand.id,
                         product_id: product.id,
                         name: brand.name,
-                        price: brand.price,
+                        price: Number(brand.price),
                         prev_price: brand.prevPrice,
                         change: brand.change,
                         updated_at: brand.updatedAt || new Date().toISOString()
@@ -129,6 +156,7 @@ export async function writeDb(data: DbSchema): Promise<void> {
         }
     } catch (error) {
         console.error('Error writing to Supabase:', error);
+        throw error;
     }
 }
 

@@ -24,7 +24,11 @@ export async function POST(request: Request) {
 
         await writeDb(db);
         return NextResponse.json({ success: true });
-    } catch (error) {
-        return NextResponse.json({ error: 'Failed to update products' }, { status: 500 });
+    } catch (error: any) {
+        console.error('Update API Error:', error);
+        return NextResponse.json({
+            error: 'Failed to update products',
+            details: error.message || String(error)
+        }, { status: 500 });
     }
 }

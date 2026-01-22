@@ -1,18 +1,56 @@
 "use client";
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, forwardRef, useImperativeHandle, useRef } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import {
     AllCommunityModule,
     ModuleRegistry,
     ColDef,
-    ValueFormatterParams
+    ValueFormatterParams,
+    ICellEditorParams
 } from 'ag-grid-community';
-import { Save, Plus, Download, Upload, ArrowLeft } from 'lucide-react';
+import { Save, Plus, Download, Upload, ArrowLeft, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 
 // Register all community modules
 ModuleRegistry.registerModules([AllCommunityModule]);
+
+const DatalistCellEditor = forwardRef((props: ICellEditorParams & { options: string[] }, ref) => {
+    const [value, setValue] = useState(props.value);
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    useImperativeHandle(ref, () => ({
+        getValue: () => value,
+    }));
+
+    // Focus input when the editor is shown
+    React.useEffect(() => {
+        if (inputRef.current) {
+            inputRef.current.focus();
+        }
+    }, []);
+
+    const options = props.options || [];
+    const listId = `datalist-${props.column.getColId()}`;
+
+    return (
+        <div className="w-full h-full p-0">
+            <input
+                ref={inputRef}
+                value={value}
+                onChange={e => setValue(e.target.value)}
+                list={listId}
+                className="w-full h-full bg-zinc-900 text-white border-none outline-none px-2 focus:ring-1 focus:ring-green-500"
+            />
+            <datalist id={listId}>
+                {options.map((opt) => (
+                    <option key={opt} value={opt} />
+                ))}
+            </datalist>
+        </div>
+    );
+});
+DatalistCellEditor.displayName = 'DatalistCellEditor';
 
 interface GridRow {
     productId: string;
@@ -31,8 +69,11 @@ interface AdminGridProps {
 }
 
 export const AdminGrid: React.FC<AdminGridProps> = ({ initialData, onSave }) => {
-    const [rowData, setRowData] = useState<GridRow[]>(() => {
-        return initialData.flatMap(p =>
+    const gridRef = useRef<AgGridReact>(null);
+    const [rowData, setRowData] = useState<GridRow[]>([]);
+
+    const mapInitialData = (data: any[]) => {
+        return data.flatMap(p =>
             p.brands.map((b: any) => ({
                 productId: p.id,
                 productName: p.name,
@@ -44,7 +85,18 @@ export const AdminGrid: React.FC<AdminGridProps> = ({ initialData, onSave }) => 
                 updatedAt: b.updatedAt
             }))
         );
-    });
+    };
+
+    // Initial load and sync on prop change
+    React.useEffect(() => {
+        if (Array.isArray(initialData)) {
+            setRowData(mapInitialData(initialData));
+        }
+    }, [initialData]);
+
+    const uniqueProducts = useMemo(() => Array.from(new Set(rowData.map(r => r.productName).filter(Boolean))), [rowData]);
+    const uniqueTeluguProducts = useMemo(() => Array.from(new Set(rowData.map(r => r.productTeluguName).filter(Boolean))), [rowData]);
+    const uniqueBrands = useMemo(() => Array.from(new Set(rowData.map(r => r.brandName).filter(Boolean))), [rowData]);
 
     const columnDefs = useMemo<ColDef<GridRow>[]>(() => [
         {
@@ -55,9 +107,30 @@ export const AdminGrid: React.FC<AdminGridProps> = ({ initialData, onSave }) => 
             type: 'numericColumn',
             sort: 'asc'
         },
-        { field: 'productName', headerName: 'Product (EN)', editable: true, flex: 1 },
-        { field: 'productTeluguName', headerName: 'Product (TE)', editable: true, flex: 1 },
-        { field: 'brandName', headerName: 'Brand', editable: true, flex: 1 },
+        {
+            field: 'productName',
+            headerName: 'Product (EN)',
+            editable: true,
+            flex: 1,
+            cellEditor: DatalistCellEditor,
+            cellEditorParams: { options: uniqueProducts }
+        },
+        {
+            field: 'productTeluguName',
+            headerName: 'Product (TE)',
+            editable: true,
+            flex: 1,
+            cellEditor: DatalistCellEditor,
+            cellEditorParams: { options: uniqueTeluguProducts }
+        },
+        {
+            field: 'brandName',
+            headerName: 'Brand',
+            editable: true,
+            flex: 1,
+            cellEditor: DatalistCellEditor,
+            cellEditorParams: { options: uniqueBrands }
+        },
         {
             field: 'price',
             headerName: 'Price (₹)',
@@ -71,14 +144,36 @@ export const AdminGrid: React.FC<AdminGridProps> = ({ initialData, onSave }) => 
             headerName: 'Last Updated',
             editable: false,
             valueFormatter: (params: ValueFormatterParams) => params.value ? new Date(params.value).toLocaleString() : 'N/A'
+        },
+        {
+            headerName: 'Actions',
+            width: 80,
+            cellRenderer: (params: any) => (
+                <button
+                    onClick={() => handleDeleteRow(params.data)}
+                    className="p-1 hover:bg-red-500/20 text-red-500 rounded-lg transition-colors mt-1"
+                    title="Delete Row"
+                >
+                    <Trash2 size={16} />
+                </button>
+            ),
+            editable: false,
+            sortable: false,
+            filter: false
         }
-    ], []);
+    ], [uniqueProducts, uniqueTeluguProducts, uniqueBrands]);
 
     const defaultColDef = useMemo(() => ({
         sortable: true,
         filter: true,
         resizable: true
     }), []);
+
+    const handleDeleteRow = (data: GridRow) => {
+        if (confirm(`Are you sure you want to delete ${data.productName} (${data.brandName})?`)) {
+            setRowData(prev => prev.filter(r => r.brandId !== data.brandId));
+        }
+    };
 
     const handleAddRow = () => {
         const newRow: GridRow = {
@@ -138,8 +233,15 @@ export const AdminGrid: React.FC<AdminGridProps> = ({ initialData, onSave }) => 
     };
 
     const handleSave = () => {
+        if (!gridRef.current?.api) return;
+
+        const currentRows: GridRow[] = [];
+        gridRef.current.api.forEachNode((node) => {
+            if (node.data) currentRows.push(node.data);
+        });
+
         const productMap = new Map();
-        rowData.forEach(row => {
+        currentRows.forEach(row => {
             if (!productMap.has(row.productName)) {
                 productMap.set(row.productName, {
                     id: row.productId,
@@ -187,6 +289,7 @@ export const AdminGrid: React.FC<AdminGridProps> = ({ initialData, onSave }) => 
 
             <div className="flex-1 ag-theme-alpine-dark rounded-2xl overflow-hidden border border-zinc-800">
                 <AgGridReact
+                    ref={gridRef}
                     rowData={rowData}
                     columnDefs={columnDefs}
                     defaultColDef={defaultColDef}
