@@ -273,12 +273,13 @@ export const AdminGrid: React.FC<AdminGridProps> = ({ initialData, onSave }) => 
     };
 
     const onCellValueChanged = (event: any) => {
-        // Ensure the change is reflected in the rowData state to prevent reverts on re-renders
-        // We iterate to create a new array reference but keep item references where possible, 
-        // except the changed one which is already mutated by AG Grid. 
-        // Actually, AG Grid mutates the data object directly. 
-        // We just need to trigger a state update to keep React in sync.
-        setRowData(prevData => [...prevData]);
+        const { data } = event;
+        // Explicitly update the specific row in state using immutable pattern
+        setRowData(prevData => prevData.map(row =>
+            (row.productId === data.productId && row.brandId === data.brandId)
+                ? { ...data }
+                : row
+        ));
     };
 
     return (
@@ -315,6 +316,7 @@ export const AdminGrid: React.FC<AdminGridProps> = ({ initialData, onSave }) => 
                     columnDefs={columnDefs}
                     defaultColDef={defaultColDef}
                     onCellValueChanged={onCellValueChanged}
+                    getRowId={(params) => `${params.data.productId}_${params.data.brandId}`}
                 />
             </div>
         </div>
