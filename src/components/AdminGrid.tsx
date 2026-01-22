@@ -27,19 +27,30 @@ const generateId = () => {
 };
 
 const DatalistCellEditor = forwardRef((props: ICellEditorParams & { options: string[] }, ref) => {
-    const [value, setValue] = useState(props.value || '');
+    // Use a ref to track the value immediately. This avoids async state update delays.
+    const valueRef = useRef(props.value || '');
     const inputRef = useRef<HTMLInputElement>(null);
 
+    // We still use state to driver the UI, but getValue relies on the Ref
+    const [_, forceUpdate] = useState({});
+
     useImperativeHandle(ref, () => ({
-        getValue: () => value,
-    }), [value]);
+        getValue: () => valueRef.current,
+    }));
 
     // Focus input when the editor is shown
     React.useEffect(() => {
         if (inputRef.current) {
             inputRef.current.focus();
+            // Optional: select all text on focus for easier editing
+            inputRef.current.select();
         }
     }, []);
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        valueRef.current = e.target.value;
+        forceUpdate({}); // Re-render to show value in input
+    };
 
     const options = props.options || [];
     const listId = `datalist-${props.column.getColId()}`;
@@ -48,8 +59,8 @@ const DatalistCellEditor = forwardRef((props: ICellEditorParams & { options: str
         <div className="w-full h-full p-0">
             <input
                 ref={inputRef}
-                value={value}
-                onChange={e => setValue(e.target.value)}
+                value={valueRef.current}
+                onChange={handleChange}
                 list={listId}
                 className="w-full h-full bg-zinc-900 text-white border-none outline-none px-2 focus:ring-1 focus:ring-green-500"
             />
@@ -116,7 +127,8 @@ export const AdminGrid: React.FC<AdminGridProps> = ({ initialData, onSave }) => 
             editable: true,
             width: 80,
             type: 'numericColumn',
-            sort: 'asc'
+            sort: 'asc',
+            valueParser: params => Number(params.newValue)
         },
         {
             field: 'productName',
@@ -147,6 +159,7 @@ export const AdminGrid: React.FC<AdminGridProps> = ({ initialData, onSave }) => 
             headerName: 'Price (₹)',
             editable: true,
             type: 'numericColumn',
+            valueParser: params => Number(params.newValue),
             valueFormatter: (params: ValueFormatterParams) => params.value ? `₹${Number(params.value).toFixed(2)}` : '₹0.00',
             cellClass: 'font-bold text-green-500'
         },
@@ -317,6 +330,8 @@ export const AdminGrid: React.FC<AdminGridProps> = ({ initialData, onSave }) => 
                     defaultColDef={defaultColDef}
                     onCellValueChanged={onCellValueChanged}
                     getRowId={(params) => `${params.data.productId}_${params.data.brandId}`}
+                    stopEditingWhenCellsLoseFocus={true}
+                    singleClickEdit={true}
                 />
             </div>
         </div>
