@@ -13,7 +13,18 @@ import { Save, Plus, Download, Upload, ArrowLeft, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 
 // Register all community modules
+// Register all community modules
 ModuleRegistry.registerModules([AllCommunityModule]);
+
+const generateId = () => {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        return crypto.randomUUID();
+    }
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+};
 
 const DatalistCellEditor = forwardRef((props: ICellEditorParams & { options: string[] }, ref) => {
     const [value, setValue] = useState(props.value);
@@ -177,11 +188,11 @@ export const AdminGrid: React.FC<AdminGridProps> = ({ initialData, onSave }) => 
 
     const handleAddRow = () => {
         const newRow: GridRow = {
-            productId: `p-${Date.now()}`,
+            productId: generateId(),
             productName: 'New Product',
             productTeluguName: '',
             displayOrder: rowData.length > 0 ? Math.max(...rowData.map(r => r.displayOrder || 0)) + 1 : 1,
-            brandId: `b-${Date.now()}`,
+            brandId: generateId(),
             brandName: 'New Brand',
             price: 0,
             updatedAt: new Date().toISOString()
@@ -217,10 +228,10 @@ export const AdminGrid: React.FC<AdminGridProps> = ({ initialData, onSave }) => 
                 .map(line => {
                     const parts = line.split(',');
                     return {
-                        productId: `p-${Date.now()}-${Math.random()}`,
+                        productId: generateId(),
                         productName: parts[0]?.trim() || 'Imported',
                         productTeluguName: parts[1]?.trim() || '',
-                        brandId: `b-${Date.now()}-${Math.random()}`,
+                        brandId: generateId(),
                         brandName: parts[2]?.trim() || 'Default',
                         price: Number(parts[3]?.trim()) || 0,
                         updatedAt: new Date().toISOString()
@@ -289,6 +300,7 @@ export const AdminGrid: React.FC<AdminGridProps> = ({ initialData, onSave }) => 
 
             <div className="flex-1 ag-theme-alpine-dark rounded-2xl overflow-hidden border border-zinc-800">
                 <AgGridReact
+                    theme="legacy"
                     ref={gridRef}
                     rowData={rowData}
                     columnDefs={columnDefs}
