@@ -27,12 +27,12 @@ const generateId = () => {
 };
 
 const DatalistCellEditor = forwardRef((props: ICellEditorParams & { options: string[] }, ref) => {
-    const [value, setValue] = useState(props.value);
+    const [value, setValue] = useState(props.value || '');
     const inputRef = useRef<HTMLInputElement>(null);
 
     useImperativeHandle(ref, () => ({
         getValue: () => value,
-    }));
+    }), [value]);
 
     // Focus input when the editor is shown
     React.useEffect(() => {
@@ -272,6 +272,15 @@ export const AdminGrid: React.FC<AdminGridProps> = ({ initialData, onSave }) => 
         onSave(Array.from(productMap.values()));
     };
 
+    const onCellValueChanged = (event: any) => {
+        // Ensure the change is reflected in the rowData state to prevent reverts on re-renders
+        // We iterate to create a new array reference but keep item references where possible, 
+        // except the changed one which is already mutated by AG Grid. 
+        // Actually, AG Grid mutates the data object directly. 
+        // We just need to trigger a state update to keep React in sync.
+        setRowData(prevData => [...prevData]);
+    };
+
     return (
         <div className="flex flex-col h-[calc(100vh-120px)]">
             <div className="flex justify-between items-center mb-6">
@@ -305,6 +314,7 @@ export const AdminGrid: React.FC<AdminGridProps> = ({ initialData, onSave }) => 
                     rowData={rowData}
                     columnDefs={columnDefs}
                     defaultColDef={defaultColDef}
+                    onCellValueChanged={onCellValueChanged}
                 />
             </div>
         </div>
