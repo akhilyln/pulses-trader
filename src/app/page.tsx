@@ -94,7 +94,7 @@ export default function Home() {
 
         {!loading && filteredProducts.length === 0 && (
           <div className="text-center py-20 bg-zinc-900/50 rounded-3xl border border-zinc-800">
-            <p className="text-zinc-500 text-lg">No products found matching "{search}"</p>
+            <p className="text-zinc-500 text-lg">No products found matching &quot;{search}&quot;</p>
           </div>
         )}
       </div>

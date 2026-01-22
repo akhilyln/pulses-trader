@@ -1,0 +1,85 @@
+﻿
+> pulses-trader@0.1.0 lint
+> eslint
+
+
+C:\Users\ASUS\Documents\AG Projects\pulses-trader\src\app\admin\dashboard\page.tsx
+   9:38  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  36:18  warning  'error' is defined but never used         @typescript-eslint/no-unused-vars
+  44:48  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\ASUS\Documents\AG Projects\pulses-trader\src\app\api\admin\update\route.ts
+   2:27  warning  'Product' is defined but never used       @typescript-eslint/no-unused-vars
+   2:36  warning  'Brand' is defined but never used         @typescript-eslint/no-unused-vars
+  27:21  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\ASUS\Documents\AG Projects\pulses-trader\src\app\api\products\route.ts
+  11:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\ASUS\Documents\AG Projects\pulses-trader\src\app\api\rates\update\route.ts
+   1:27  warning  'Product' is defined but never used  @typescript-eslint/no-unused-vars
+   1:36  warning  'Brand' is defined but never used    @typescript-eslint/no-unused-vars
+  39:14  warning  'error' is defined but never used    @typescript-eslint/no-unused-vars
+
+C:\Users\ASUS\Documents\AG Projects\pulses-trader\src\app\page.tsx
+  10:44  error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  13:58  error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  26:14  warning  'error' is defined but never used                                @typescript-eslint/no-unused-vars
+  39:22  error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  97:77  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  97:86  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+C:\Users\ASUS\Documents\AG Projects\pulses-trader\src\components\AdminGrid.tsx
+   24:9   error    Unexpected var, use let or const instead                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               no-var
+   35:12  warning  '_' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+   62:24  error    Error: Cannot access refs during render
+
+React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+
+C:\Users\ASUS\Documents\AG Projects\pulses-trader\src\components\AdminGrid.tsx:62:24
+  60 |             <input
+  61 |                 ref={inputRef}
+> 62 |                 value={valueRef.current}
+     |                        ^^^^^^^^^^^^^^^^ Cannot access ref value during render
+  63 |                 onChange={handleChange}
+  64 |                 list={listId}
+  65 |                 className="w-full h-full bg-zinc-900 text-white border-none outline-none px-2 focus:ring-1 focus:ring-green-500"                                                                                                                                                                             react-hooks/refs
+   89:18  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-explicit-any
+   90:20  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-explicit-any
+   97:35  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-explicit-any
+   99:30  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-explicit-any
+  123:24  error    Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output.
+
+C:\Users\ASUS\Documents\AG Projects\pulses-trader\src\components\AdminGrid.tsx:123:24
+  121 |     const uniqueBrands = useMemo(() => Array.from(new Set(rowData.map(r => r.brandName).filter(Boolean))), [rowData]);
+  122 |
+> 123 |     const columnDefs = useMemo<ColDef<GridRow>[]>(() => [
+      |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 124 |         {
+      | ^^^^^^^^^
+> 125 |             field: 'displayOrder',
+      ΓÇª
+      | ^^^^^^^^^
+> 187 |         }
+      | ^^^^^^^^^
+> 188 |     ], [uniqueProducts, uniqueTeluguProducts, uniqueBrands]);
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Could not preserve existing memoization
+  189 |
+  190 |     const defaultColDef = useMemo(() => ({
+  191 |         sortable: true,  react-hooks/preserve-manual-memoization
+  175:36  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-explicit-any
+  288:40  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-explicit-any
+
+C:\Users\ASUS\Documents\AG Projects\pulses-trader\src\lib\db.ts
+  57:66  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  63:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  82:69  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\ASUS\Documents\AG Projects\pulses-trader\src\scripts\migrate.ts
+  2:10  warning  'readDb' is defined but never used  @typescript-eslint/no-unused-vars
+
+Γ£û 30 problems (20 errors, 10 warnings)
+  1 error and 0 warnings potentially fixable with the `--fix` option.
+

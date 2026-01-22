@@ -102,7 +102,6 @@ export async function writeDb(data: DbSchema): Promise<void> {
         if (incomingBrandIds.length > 0) {
             brandDeleteQuery = brandDeleteQuery.not('id', 'in', `(${incomingBrandIds.map(id => `"${id}"`).join(',')})`);
         } else {
-            // If no brands, delete all (using a filter that's always true for IDs)
             brandDeleteQuery = brandDeleteQuery.neq('id', 'ffffffff-ffff-ffff-ffff-ffffffffffff');
         }
         const { error: deleteBrandsError } = await brandDeleteQuery;

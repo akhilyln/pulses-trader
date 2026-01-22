@@ -27,30 +27,17 @@ const generateId = () => {
 };
 
 const DatalistCellEditor = forwardRef((props: ICellEditorParams & { options: string[] }, ref) => {
-    // Use a ref to track the value immediately. This avoids async state update delays.
-    const valueRef = useRef(props.value || '');
     const inputRef = useRef<HTMLInputElement>(null);
 
-    // We still use state to driver the UI, but getValue relies on the Ref
-    const [_, forceUpdate] = useState({});
-
     useImperativeHandle(ref, () => ({
-        getValue: () => valueRef.current,
-    }));
-
-    // Focus input when the editor is shown
-    React.useEffect(() => {
-        if (inputRef.current) {
-            inputRef.current.focus();
-            // Optional: select all text on focus for easier editing
-            inputRef.current.select();
+        getValue: () => inputRef.current?.value || props.value,
+        afterGuiAttached: () => {
+            if (inputRef.current) {
+                inputRef.current.focus();
+                inputRef.current.select();
+            }
         }
-    }, []);
-
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        valueRef.current = e.target.value;
-        forceUpdate({}); // Re-render to show value in input
-    };
+    }));
 
     const options = props.options || [];
     const listId = `datalist-${props.column.getColId()}`;
@@ -59,8 +46,7 @@ const DatalistCellEditor = forwardRef((props: ICellEditorParams & { options: str
         <div className="w-full h-full p-0">
             <input
                 ref={inputRef}
-                value={valueRef.current}
-                onChange={handleChange}
+                defaultValue={props.value}
                 list={listId}
                 className="w-full h-full bg-zinc-900 text-white border-none outline-none px-2 focus:ring-1 focus:ring-green-500"
             />
@@ -95,8 +81,8 @@ export const AdminGrid: React.FC<AdminGridProps> = ({ initialData, onSave }) => 
     const [rowData, setRowData] = useState<GridRow[]>([]);
 
     const mapInitialData = (data: any[]) => {
-        return data.flatMap(p =>
-            p.brands.map((b: any) => ({
+        return data.flatMap(p => {
+            return p.brands.map((b: any) => ({
                 productId: p.id,
                 productName: p.name,
                 productTeluguName: p.teluguName,
@@ -105,8 +91,8 @@ export const AdminGrid: React.FC<AdminGridProps> = ({ initialData, onSave }) => 
                 brandName: b.name,
                 price: b.price,
                 updatedAt: b.updatedAt
-            }))
-        );
+            }));
+        });
     };
 
     // Initial load and sync on prop change
@@ -135,24 +121,21 @@ export const AdminGrid: React.FC<AdminGridProps> = ({ initialData, onSave }) => 
             headerName: 'Product (EN)',
             editable: true,
             flex: 1,
-            cellEditor: DatalistCellEditor,
-            cellEditorParams: { options: uniqueProducts }
+            // Custom editor disabled for debugging
         },
         {
             field: 'productTeluguName',
             headerName: 'Product (TE)',
             editable: true,
             flex: 1,
-            cellEditor: DatalistCellEditor,
-            cellEditorParams: { options: uniqueTeluguProducts }
+            // Custom editor disabled for debugging
         },
         {
             field: 'brandName',
             headerName: 'Brand',
             editable: true,
             flex: 1,
-            cellEditor: DatalistCellEditor,
-            cellEditorParams: { options: uniqueBrands }
+            // Custom editor disabled for debugging
         },
         {
             field: 'price',
@@ -172,7 +155,7 @@ export const AdminGrid: React.FC<AdminGridProps> = ({ initialData, onSave }) => 
         {
             headerName: 'Actions',
             width: 80,
-            cellRenderer: (params: any) => (
+            cellRenderer: (params: { data: GridRow }) => (
                 <button
                     onClick={() => handleDeleteRow(params.data)}
                     className="p-1 hover:bg-red-500/20 text-red-500 rounded-lg transition-colors mt-1"
@@ -264,10 +247,14 @@ export const AdminGrid: React.FC<AdminGridProps> = ({ initialData, onSave }) => 
             if (node.data) currentRows.push(node.data);
         });
 
+        // Group rows that have the same Product Name, Telugu Name, and Display Order.
+        // This satisfies the database's unique name constraint while allowing UI independence.
         const productMap = new Map();
         currentRows.forEach(row => {
-            if (!productMap.has(row.productName)) {
-                productMap.set(row.productName, {
+            const key = `${row.productName}|${row.productTeluguName || ''}|${row.displayOrder || 0}`;
+
+            if (!productMap.has(key)) {
+                productMap.set(key, {
                     id: row.productId,
                     name: row.productName,
                     teluguName: row.productTeluguName,
@@ -275,7 +262,7 @@ export const AdminGrid: React.FC<AdminGridProps> = ({ initialData, onSave }) => 
                     brands: []
                 });
             }
-            productMap.get(row.productName).brands.push({
+            productMap.get(key).brands.push({
                 id: row.brandId,
                 name: row.brandName,
                 price: Number(row.price),
@@ -286,13 +273,24 @@ export const AdminGrid: React.FC<AdminGridProps> = ({ initialData, onSave }) => 
     };
 
     const onCellValueChanged = (event: any) => {
-        const { data } = event;
-        // Explicitly update the specific row in state using immutable pattern
-        setRowData(prevData => prevData.map(row =>
-            (row.productId === data.productId && row.brandId === data.brandId)
-                ? { ...data }
-                : row
-        ));
+        const { data, colDef, newValue, oldValue } = event;
+        if (newValue === oldValue) return;
+
+        const field = colDef.field as keyof GridRow;
+        const targetBrandId = data.brandId;
+
+        setRowData(prevData => {
+            return prevData.map(row => {
+                if (row.brandId === targetBrandId) {
+                    return {
+                        ...row,
+                        [field]: newValue,
+                        updatedAt: new Date().toISOString()
+                    };
+                }
+                return row;
+            });
+        });
     };
 
     return (
