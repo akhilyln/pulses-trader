@@ -26,43 +26,6 @@ const generateId = () => {
     });
 };
 
-const DatalistCellEditor = forwardRef((props: ICellEditorParams & { options: string[] }, ref) => {
-    const inputRef = useRef<HTMLInputElement>(null);
-
-    useImperativeHandle(ref, () => ({
-        getValue: () => {
-            const val = inputRef.current?.value;
-            // Return empty string if input is empty, otherwise return value or original prop.value
-            return val !== undefined ? val : props.value;
-        },
-        afterGuiAttached: () => {
-            if (inputRef.current) {
-                inputRef.current.focus();
-                inputRef.current.select();
-            }
-        }
-    }));
-
-    const options = props.options || [];
-    const listId = `datalist-${props.column.getColId()}`;
-
-    return (
-        <div className="w-full h-full p-0">
-            <input
-                ref={inputRef}
-                defaultValue={props.value}
-                list={listId}
-                className="w-full h-full bg-zinc-900 text-white border-none outline-none px-2 focus:ring-1 focus:ring-green-500"
-            />
-            <datalist id={listId}>
-                {options.map((opt) => (
-                    <option key={opt} value={opt} />
-                ))}
-            </datalist>
-        </div>
-    );
-});
-DatalistCellEditor.displayName = 'DatalistCellEditor';
 
 interface GridRow {
     productId: string;
@@ -109,11 +72,6 @@ export const AdminGrid: React.FC<AdminGridProps> = ({ initialData, onSave }) => 
 
     // Derived lists using useMemo for stability, but independent of rowData for better editor stability
     // We only update these when rowData changes, but we keep them stable for the editor
-    // Derived lists using useMemo for stability.
-    // We update these when rowData changes to keep datalist suggestions fresh.
-    const uniqueProducts = useMemo(() => Array.from(new Set(rowData.map(r => r.productName).filter(Boolean))), [rowData]);
-    const uniqueTeluguProducts = useMemo(() => Array.from(new Set(rowData.map(r => r.productTeluguName).filter(Boolean))), [rowData]);
-    const uniqueBrands = useMemo(() => Array.from(new Set(rowData.map(r => r.brandName).filter(Boolean))), [rowData]);
 
     const gridRef = useRef<AgGridReact>(null);
 
@@ -131,25 +89,19 @@ export const AdminGrid: React.FC<AdminGridProps> = ({ initialData, onSave }) => 
             field: 'productName',
             headerName: 'Product (EN)',
             editable: true,
-            flex: 1,
-            cellEditor: DatalistCellEditor,
-            cellEditorParams: { options: uniqueProducts }
+            flex: 1
         },
         {
             field: 'productTeluguName',
             headerName: 'Product (TE)',
             editable: true,
-            flex: 1,
-            cellEditor: DatalistCellEditor,
-            cellEditorParams: { options: uniqueTeluguProducts }
+            flex: 1
         },
         {
             field: 'brandName',
             headerName: 'Brand',
             editable: true,
-            flex: 1,
-            cellEditor: DatalistCellEditor,
-            cellEditorParams: { options: uniqueBrands }
+            flex: 1
         },
         {
             field: 'price',
@@ -185,7 +137,7 @@ export const AdminGrid: React.FC<AdminGridProps> = ({ initialData, onSave }) => 
             sortable: false,
             filter: false
         }
-    ], [uniqueProducts, uniqueTeluguProducts, uniqueBrands]);
+    ], []);
 
     const defaultColDef = useMemo(() => ({
         sortable: true,
