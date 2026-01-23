@@ -77,8 +77,7 @@ interface AdminGridProps {
 }
 
 export const AdminGrid: React.FC<AdminGridProps> = ({ initialData, onSave }) => {
-    const gridRef = useRef<AgGridReact>(null);
-    const [rowData, setRowData] = useState<GridRow[]>([]);
+    const isInitialized = useRef(false);
 
     const mapInitialData = (data: any[]) => {
         return data.flatMap(p => {
@@ -95,16 +94,21 @@ export const AdminGrid: React.FC<AdminGridProps> = ({ initialData, onSave }) => 
         });
     };
 
-    // Initial load and sync on prop change
+    // Initial load only - prevent subsequent prop changes from wiping out local state
     React.useEffect(() => {
-        if (Array.isArray(initialData)) {
+        if (Array.isArray(initialData) && !isInitialized.current) {
             setRowData(mapInitialData(initialData));
+            isInitialized.current = true;
         }
     }, [initialData]);
 
-    const uniqueProducts = useMemo(() => Array.from(new Set(rowData.map(r => r.productName).filter(Boolean))), [rowData]);
-    const uniqueTeluguProducts = useMemo(() => Array.from(new Set(rowData.map(r => r.productTeluguName).filter(Boolean))), [rowData]);
-    const uniqueBrands = useMemo(() => Array.from(new Set(rowData.map(r => r.brandName).filter(Boolean))), [rowData]);
+    // Derived lists using useMemo for stability, but independent of rowData for better editor stability
+    // We only update these when rowData changes, but we keep them stable for the editor
+    const uniqueProducts = useMemo(() => Array.from(new Set(rowData.map(r => r.productName).filter(Boolean))), [rowData.length > 0]);
+    const uniqueTeluguProducts = useMemo(() => Array.from(new Set(rowData.map(r => r.productTeluguName).filter(Boolean))), [rowData.length > 0]);
+    const uniqueBrands = useMemo(() => Array.from(new Set(rowData.map(r => r.brandName).filter(Boolean))), [rowData.length > 0]);
+
+    const gridRef = useRef<AgGridReact>(null);
 
     const columnDefs = useMemo<ColDef<GridRow>[]>(() => [
         {
@@ -114,7 +118,7 @@ export const AdminGrid: React.FC<AdminGridProps> = ({ initialData, onSave }) => 
             width: 80,
             type: 'numericColumn',
             sort: 'asc',
-            valueParser: params => Number(params.newValue)
+            valueParser: params => Number(params.newValue) || 0
         },
         {
             field: 'productName',
@@ -145,7 +149,10 @@ export const AdminGrid: React.FC<AdminGridProps> = ({ initialData, onSave }) => 
             headerName: 'Price (₹)',
             editable: true,
             type: 'numericColumn',
-            valueParser: params => Number(params.newValue),
+            valueParser: params => {
+                const val = Number(params.newValue);
+                return isNaN(val) ? params.oldValue : val;
+            },
             valueFormatter: (params: ValueFormatterParams) => params.value ? `₹${Number(params.value).toFixed(2)}` : '₹0.00',
             cellClass: 'font-bold text-green-500'
         },
