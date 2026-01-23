@@ -30,7 +30,11 @@ const DatalistCellEditor = forwardRef((props: ICellEditorParams & { options: str
     const inputRef = useRef<HTMLInputElement>(null);
 
     useImperativeHandle(ref, () => ({
-        getValue: () => inputRef.current?.value || props.value,
+        getValue: () => {
+            const val = inputRef.current?.value;
+            // Return empty string if input is empty, otherwise return value or original prop.value
+            return val !== undefined ? val : props.value;
+        },
         afterGuiAttached: () => {
             if (inputRef.current) {
                 inputRef.current.focus();
@@ -105,9 +109,11 @@ export const AdminGrid: React.FC<AdminGridProps> = ({ initialData, onSave }) => 
 
     // Derived lists using useMemo for stability, but independent of rowData for better editor stability
     // We only update these when rowData changes, but we keep them stable for the editor
-    const uniqueProducts = useMemo(() => Array.from(new Set(rowData.map(r => r.productName).filter(Boolean))), [rowData.length > 0]);
-    const uniqueTeluguProducts = useMemo(() => Array.from(new Set(rowData.map(r => r.productTeluguName).filter(Boolean))), [rowData.length > 0]);
-    const uniqueBrands = useMemo(() => Array.from(new Set(rowData.map(r => r.brandName).filter(Boolean))), [rowData.length > 0]);
+    // Derived lists using useMemo for stability.
+    // We update these when rowData changes to keep datalist suggestions fresh.
+    const uniqueProducts = useMemo(() => Array.from(new Set(rowData.map(r => r.productName).filter(Boolean))), [rowData]);
+    const uniqueTeluguProducts = useMemo(() => Array.from(new Set(rowData.map(r => r.productTeluguName).filter(Boolean))), [rowData]);
+    const uniqueBrands = useMemo(() => Array.from(new Set(rowData.map(r => r.brandName).filter(Boolean))), [rowData]);
 
     const gridRef = useRef<AgGridReact>(null);
 
@@ -187,13 +193,13 @@ export const AdminGrid: React.FC<AdminGridProps> = ({ initialData, onSave }) => 
         resizable: true
     }), []);
 
-    const handleDeleteRow = (data: GridRow) => {
+    const handleDeleteRow = React.useCallback((data: GridRow) => {
         if (confirm(`Are you sure you want to delete ${data.productName} (${data.brandName})?`)) {
             setRowData(prev => prev.filter(r => r.brandId !== data.brandId));
         }
-    };
+    }, []);
 
-    const handleAddRow = () => {
+    const handleAddRow = React.useCallback(() => {
         const newRow: GridRow = {
             productId: generateId(),
             productName: 'New Product',
@@ -204,8 +210,8 @@ export const AdminGrid: React.FC<AdminGridProps> = ({ initialData, onSave }) => 
             price: 0,
             updatedAt: new Date().toISOString()
         };
-        setRowData([newRow, ...rowData]);
-    };
+        setRowData(prev => [newRow, ...prev]);
+    }, [rowData.length]);
 
     const handleExportCSV = () => {
         const headers = ['Product (EN)', 'Product (TE)', 'Brand', 'Price'];
@@ -283,7 +289,7 @@ export const AdminGrid: React.FC<AdminGridProps> = ({ initialData, onSave }) => 
         onSave(Array.from(productMap.values()));
     };
 
-    const onCellValueChanged = (event: any) => {
+    const onCellValueChanged = React.useCallback((event: any) => {
         const { data, colDef, newValue, oldValue } = event;
         if (newValue === oldValue) return;
 
@@ -302,7 +308,7 @@ export const AdminGrid: React.FC<AdminGridProps> = ({ initialData, onSave }) => 
                 return row;
             });
         });
-    };
+    }, []);
 
     return (
         <div className="flex flex-col h-[calc(100vh-120px)]">
@@ -332,7 +338,6 @@ export const AdminGrid: React.FC<AdminGridProps> = ({ initialData, onSave }) => 
 
             <div className="flex-1 ag-theme-alpine-dark rounded-2xl overflow-hidden border border-zinc-800">
                 <AgGridReact
-                    theme="legacy"
                     ref={gridRef}
                     rowData={rowData}
                     columnDefs={columnDefs}
