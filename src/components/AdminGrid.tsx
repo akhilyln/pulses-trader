@@ -121,21 +121,24 @@ export const AdminGrid: React.FC<AdminGridProps> = ({ initialData, onSave }) => 
             headerName: 'Product (EN)',
             editable: true,
             flex: 1,
-            // Custom editor disabled for debugging
+            cellEditor: DatalistCellEditor,
+            cellEditorParams: { options: uniqueProducts }
         },
         {
             field: 'productTeluguName',
             headerName: 'Product (TE)',
             editable: true,
             flex: 1,
-            // Custom editor disabled for debugging
+            cellEditor: DatalistCellEditor,
+            cellEditorParams: { options: uniqueTeluguProducts }
         },
         {
             field: 'brandName',
             headerName: 'Brand',
             editable: true,
             flex: 1,
-            // Custom editor disabled for debugging
+            cellEditor: DatalistCellEditor,
+            cellEditorParams: { options: uniqueBrands }
         },
         {
             field: 'price',
