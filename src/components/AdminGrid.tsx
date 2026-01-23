@@ -77,6 +77,7 @@ interface AdminGridProps {
 }
 
 export const AdminGrid: React.FC<AdminGridProps> = ({ initialData, onSave }) => {
+    const [rowData, setRowData] = useState<GridRow[]>([]);
     const isInitialized = useRef(false);
 
     const mapInitialData = (data: any[]) => {
