@@ -40,7 +40,10 @@ export async function POST(request: Request) {
 
         return NextResponse.json({
             error: 'Failed to update products',
-            details: error.message || String(error)
+            message: error.message || String(error),
+            code: error.code,
+            details: error.details,
+            hint: error.hint
         }, { status: 500 });
     }
 }

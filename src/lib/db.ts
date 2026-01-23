@@ -100,20 +100,22 @@ export async function writeDb(data: DbSchema): Promise<void> {
         // 1. Delete brands not in incoming data
         let brandDeleteQuery = supabase.from('brands').delete();
         if (incomingBrandIds.length > 0) {
-            brandDeleteQuery = brandDeleteQuery.not('id', 'in', `(${incomingBrandIds.map(id => `"${id}"`).join(',')})`);
+            brandDeleteQuery = brandDeleteQuery.not('id', 'in', incomingBrandIds);
         } else {
+            // Delete all if no brands incoming (edge case)
             brandDeleteQuery = brandDeleteQuery.neq('id', 'ffffffff-ffff-ffff-ffff-ffffffffffff');
         }
         const { error: deleteBrandsError } = await brandDeleteQuery;
 
         if (deleteBrandsError) {
             console.error('Error deleting stale brands:', deleteBrandsError);
+            throw deleteBrandsError;
         }
 
         // 2. Delete products not in incoming data
         let productDeleteQuery = supabase.from('products').delete();
         if (incomingProductIds.length > 0) {
-            productDeleteQuery = productDeleteQuery.not('id', 'in', `(${incomingProductIds.map(id => `"${id}"`).join(',')})`);
+            productDeleteQuery = productDeleteQuery.not('id', 'in', incomingProductIds);
         } else {
             productDeleteQuery = productDeleteQuery.neq('id', 'ffffffff-ffff-ffff-ffff-ffffffffffff');
         }
@@ -121,6 +123,7 @@ export async function writeDb(data: DbSchema): Promise<void> {
 
         if (deleteProductsError) {
             console.error('Error deleting stale products:', deleteProductsError);
+            throw deleteProductsError;
         }
 
         // 3. Upsert current products and brands
@@ -154,7 +157,7 @@ export async function writeDb(data: DbSchema): Promise<void> {
             }
         }
     } catch (error) {
-        console.error('Error writing to Supabase:', error);
+        console.error('CRITICAL: Error writing DB to Supabase:', error);
         throw error;
     }
 }
