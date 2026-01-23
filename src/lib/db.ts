@@ -97,12 +97,33 @@ export async function writeDb(data: DbSchema): Promise<void> {
         const incomingProductIds = data.products.map(p => p.id);
         const incomingBrandIds = data.products.flatMap(p => p.brands.map(b => b.id));
 
-        // 1. Delete brands not in incoming data
+        // 1. Find brands that are about to be deleted to clean up their history
+        const { data: staleBrands } = await supabase
+            .from('brands')
+            .select('id');
+
+        const staleBrandIds = (staleBrands || [])
+            .map(b => b.id)
+            .filter(id => !incomingBrandIds.includes(id));
+
+        if (staleBrandIds.length > 0) {
+            // Delete history for brands being removed to prevent FK violations
+            const { error: historyError } = await supabase
+                .from('price_history')
+                .delete()
+                .in('brand_id', staleBrandIds);
+
+            if (historyError) {
+                console.error('Error deleting history for stale brands:', historyError);
+            }
+        }
+
+        // 2. Delete brands not in incoming data
         let brandDeleteQuery = supabase.from('brands').delete();
         if (incomingBrandIds.length > 0) {
-            brandDeleteQuery = brandDeleteQuery.not('id', 'in', incomingBrandIds);
+            // Correct syntax for PostgREST 'not in'
+            brandDeleteQuery = brandDeleteQuery.not('id', 'in', `(${incomingBrandIds.join(',')})`);
         } else {
-            // Delete all if no brands incoming (edge case)
             brandDeleteQuery = brandDeleteQuery.neq('id', 'ffffffff-ffff-ffff-ffff-ffffffffffff');
         }
         const { error: deleteBrandsError } = await brandDeleteQuery;
@@ -112,10 +133,10 @@ export async function writeDb(data: DbSchema): Promise<void> {
             throw deleteBrandsError;
         }
 
-        // 2. Delete products not in incoming data
+        // 3. Delete products not in incoming data
         let productDeleteQuery = supabase.from('products').delete();
         if (incomingProductIds.length > 0) {
-            productDeleteQuery = productDeleteQuery.not('id', 'in', incomingProductIds);
+            productDeleteQuery = productDeleteQuery.not('id', 'in', `(${incomingProductIds.join(',')})`);
         } else {
             productDeleteQuery = productDeleteQuery.neq('id', 'ffffffff-ffff-ffff-ffff-ffffffffffff');
         }
@@ -126,7 +147,7 @@ export async function writeDb(data: DbSchema): Promise<void> {
             throw deleteProductsError;
         }
 
-        // 3. Upsert current products and brands
+        // 4. Upsert current products and brands
         for (const product of data.products) {
             const { error: pError } = await supabase
                 .from('products')
